@@ -1,0 +1,717 @@
+Aula 08 - Exercicio
+App.js
+
+import Professores from './professores'
+import Produtos from './produtos'
+
+import ListaProfessores from './Listaprofessores2'
+
+const App = () => {
+    return (
+        <div>
+            <ListaProfessores />
+        </div>
+    )
+}
+
+export default App
+-----------------------------------------------
+index.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('root')
+);
+---------------------------------------------------------
+estilos.css
+
+body {
+    background-color: #FAFAFA;
+    font-family: "Poppins"
+    margin: 5px;
+}
+
+li {
+    background-color: rgb(139, 193, 218);
+    border: 1px, rgb(30,178,247)
+}
+------------------------------------------------------------
+estilo.css
+body {
+    margin: 40px;
+    text-align: center;
+    width: 80%;
+    border: 1px, black;
+    rounded-corner: 20px;
+    intern-space: 10px
+
+}
+
+li {
+    background-color: tomato;
+    text-decoration-color: darkblue;
+    text-align: center;
+}
+------------------------------------------------------------
+Listanometele.js
+
+import { useState } from 'react'
+import "./estilos.css"
+import "./estilo.css"
+
+const ListaPessoas = () => {
+    const [ lista, setLista ] = useState([])
+    const [ nome, setNome ] = useState()
+    const [ telefone, setTelefone ] = useState()
+
+    const todaLista = lista.map((item, key)=>{
+        return(
+            <li>{ item }</li>
+        )
+    })
+
+    const addPessoa = () => {
+        setLista( x => [ ...lista, nome, telefone ])
+        console.log(lista)
+    }
+
+    return (
+        <div>
+            <h2>Lista de Pessoas</h2>
+            <div>
+                <label>Nome: </label>
+                <input type="text"
+                    value={ nome }
+                    onChange={ (e) => setNome(e.target.value)}
+                />
+                <label>Telefone: </label>
+                <input type="text"
+                    value={ telefone }
+                    onChange={ (e) => setTelefome(e.target.value)}
+                />
+                <input type="show"
+                    value="nome, telefone"
+                />
+                <ul>
+                    { todaLista }
+                </ul>
+            </div>
+        </div>
+    )
+
+}
+
+export default ListaPessoas
+------------------------------------------------------------------------
+
+Aula13 - trabalho
+
+theme.js
+
+import { createMuiTheme } from '@material-ui/core/styles'
+
+const temaClaro = createMuiTheme(({
+    palette: {
+        type: 'light',
+        primary: {
+          main: '#00BFFF',
+        },
+        secondary: {
+          main: '#66CDAA',
+        },
+        background: {
+          default: '#3CB371',
+          paper: '#00FF7F',
+        },
+      },    
+}))
+
+const temaEscuro = createMuiTheme(({
+    palette: {
+        type: 'dark',
+        primary: {
+          main: '#4F4F4F',
+        },
+        secondary: {
+          main: '#C0C0C0',
+        },
+        background: {
+          default: '#000080',
+          paper: '#006400',
+        },
+      },
+}))
+
+export { temaClaro, temaEscuro }
+----------------------------------------------------------
+menu.js
+
+import {
+    AppBar,
+    Toolbar,
+    IconButton,
+    Typography,
+    Button,
+} from '@material-ui/core'
+
+import SettingsIcon from '@material-ui/icons/Settings'
+
+import { makeStyles } from '@material-ui/core/styles'
+
+const useStyles = makeStyles((theme) => ({
+    root: {
+      flexGrow: 1,
+    },
+    menuButton: {
+      marginRight: 8,
+    },
+    title: {
+      flexGrow: 1,
+    },
+  }));
+
+
+const Menu = ({ tema }) => {
+    const classes = useStyles()
+
+    return (
+        <AppBar position="static">
+            <Toolbar>
+                <IconButton 
+                    edge="start" 
+                    color="inherit" 
+                    aria-label="menu"
+                    onClick={ tema }
+                >
+                    <SettingsIcon />
+                </IconButton>
+                <Typography variant="h6" className={classes.title} >
+                    ANEV 2021
+                    </Typography>
+                <Button color="inherit">Login</Button>
+            </Toolbar>
+        </AppBar>
+    )
+}
+
+export default Menu
+------------------------------------------------------------------------------
+index.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('root')
+);
+-------------------------------------------------------------------------------
+loginesenha.js
+
+import { useState } from 'react'
+
+const ListaNomesenha = () => {
+    const [ lista, setLista ] = useState([])
+    const [ nome, setNome ] = useState()
+    const [ senha, setSenha ] = useState()
+
+    const todaLista = lista.map((item, key)=>{
+        return(
+            <li>{ item }</li>
+        )
+    })
+
+    const addNomesenha = () => {
+        setLista( x => [ ...lista, nome, senha ])
+        console.log(lista)
+    }
+
+    return (
+        <div>
+            <h2>Lista de Nome e senhas</h2>
+            <div>
+                <label>Nome: </label>
+                <input type="text"
+                    value={ nome }
+                    onChange={ (e) => setNome(e.target.value)}
+                />
+                <label>Senha: </label>
+                <input type="text"
+                    value={ senha }
+                    onChange={ (e) => setSenha(e.target.value)}
+                />
+                <input type="button"
+                    value="login"
+                    onClick={ () => addNomesenha() }
+                />
+                <ul>
+                    { todaLista }
+                </ul>
+            </div>
+        </div>
+    )
+
+}
+
+export default ListaNomesenha
+----------------------------------------------------------------
+App.js
+
+import { useState } from 'react'
+
+import Menu from './menu'
+import Conteudo from './loginesenha'
+
+import { ThemeProvider } from '@material-ui/core/styles'
+import { CssBaseline } from '@material-ui/core'
+
+import { temaClaro, temaEscuro } from './theme/theme'
+
+const App = () => {
+
+    const [ tema, setTema ] = useState( temaEscuro )
+    const [ escuro, setEscuro ] = useState( true )
+
+    const alterarTema = () => {
+        console.log("chegou")
+        if (escuro) 
+            setTema( temaClaro )
+        else
+            setTema( temaEscuro )
+
+        setEscuro( !escuro )
+    }
+
+    return (
+        <ThemeProvider theme={ tema }>
+            <CssBaseline />
+            <Menu tema={ alterarTema } />
+                <div>
+                    <img src="https://www.flaticon.com/br/icone-gratis/coracao_181527" />
+                    <p className="legend">Legend 1</p>
+                </div>
+            <Conteudo />            
+        </ThemeProvider>
+    )
+}
+
+export default App
+--------------------------------------------------------------------------------------------------
+aula17 - trabalho final/ prova
+
+site.js
+
+import { useState } from 'react'
+
+import Menu from './menu'
+import Conteudo from './conteudo'
+
+import { ThemeProvider } from '@material-ui/core/styles'
+import { CssBaseline } from '@material-ui/core'
+
+import { temaClaro, temaEscuro } from '../theme/theme'
+
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+import { Carousel } from 'react-responsive-carousel';
+
+const Site = () => {
+
+    const [ tema, setTema ] = useState( temaEscuro )
+    const [ escuro, setEscuro ] = useState( true )
+
+    const alterarTema = () => {
+        if (escuro) 
+            setTema( temaClaro )
+        else
+            setTema( temaEscuro )
+
+        setEscuro( !escuro )
+       }
+    }
+
+    return (
+        <ThemeProvider theme={ tema }>
+            <CssBaseline />
+            <Menu tema={ alterarTema } />
+            <Carousel
+                autoplay={ true }
+                infiniteLoop={ true }
+                interval={ 2000 }
+            >
+                <div>
+                    <img alt="1" src="" />
+                    <p className="legend">Legend 1</p>
+                </div>
+                <div>
+                    <img alt="1"  src="" />
+                    <p className="legend">Legend 2</p>
+                </div>
+                <div>
+                    <img alt="1"  src="" />
+                    <p className="legend">Legend 3</p>
+                </div>
+            </Carousel>
+            <hr />
+            <Conteudo />            
+        </ThemeProvider>
+    )
+}
+
+export default Site
+----------------------------------------------------------------------------------------------
+menu.js
+
+import {
+    AppBar,
+    Toolbar,
+    IconButton,
+    Typography,
+    Button,
+} from '@material-ui/core'
+
+import SettingsIcon from '@material-ui/icons/Settings'
+
+import { makeStyles } from '@material-ui/core/styles'
+
+import { Link } from 'react-router-dom'
+
+const useStyles = makeStyles((theme) => ({
+    root: {
+      flexGrow: 1,
+    },
+    menuButton: {
+      marginRight: 8,
+    },
+    title: {
+      flexGrow: 1,
+    },
+  }));
+
+const Menu = ({ tema }) => {
+    const classes = useStyles()
+
+    const logado = 
+        (localStorage.getItem("MeuNome")) ? 
+        (
+            <div>{ localStorage.getItem("MeuNome") } </div>
+        ) : 
+        (
+            <a href="/login">
+                <Button color="inherit">Login</Button>
+            </a>
+        )
+
+
+
+    return (
+        <AppBar position="static">
+            <Toolbar>
+                <IconButton 
+                    edge="start" 
+                    color="inherit" 
+                    aria-label="menu"
+                    onClick={ tema }
+                >
+                    <SettingsIcon />
+                </IconButton>
+                <Typography variant="h6" className={classes.title} >
+                    ANEV 2021 - Prova
+                </Typography>
+                <Link 
+                    to="/admin" 
+                    style={{ textDecoration: "none", color: "white" }}
+                >
+                    <Button color="inherit">Admin</Button>
+                </Link>
+                <Button color="inherit" className={classes.menuButton}>login</Button>
+                { logado }
+            </Toolbar>
+        </AppBar>
+    )
+}
+
+export default Menu
+-------------------------------------------------------------------------------
+conteudo.js
+
+import { Paper, Typography } from '@material-ui/core'
+
+const Conteudo = () => {
+    return (
+        <Paper style={{ marginTop: 10, padding: 20 }}>
+            <Typography variant="h4">
+               Ola e bem-vindo ao nosso site
+                </Typography>
+            <Typography variant="body">
+                Exemplo de texto: O nosso site tem muitas funcionalidades que os nossos clientes gostam de usar.
+                </Typography>
+        </Paper>
+    )
+}
+
+export default Conteudo
+--------------------------------------------------------------
+theme.js
+
+import { createMuiTheme } from '@material-ui/core/styles'
+
+const temaClaro = createMuiTheme(({
+    palette: {
+        type: 'light',
+        primary: {
+          main: '#00BFFF',
+        },
+        secondary: {
+          main: '#66CDAA',
+        },
+        background: {
+          default: '#3CB371',
+          paper: '#00FF7F',
+        },
+      },    
+}))
+
+const temaEscuro = createMuiTheme(({
+    palette: {
+        type: 'dark',
+        primary: {
+          main: '#4F4F4F',
+        },
+        secondary: {
+          main: '#C0C0C0',
+        },
+        background: {
+          default: '#000080',
+          paper: '#006400',
+        },
+      },
+}))
+
+export { temaClaro, temaEscuro }
+--------------------------------------------------------------------------------------
+login.js
+
+import { TextField, Button, CircularProgress } from '@material-ui/core'
+import{ useState } from 'react'
+import axios from 'axios'
+import { Redirect } from 'react-router-dom' 
+
+const Login = () => {
+
+    const [ carregar, setCarregar ] = useState(false)
+    const [ usuario, setUsuario ] = useState()
+    const [ senha, setSenha ] = useState()
+
+    const efetuarLogin = async () => {
+        setCarregar(true)
+
+        let url = " https://provaartinleonardogillihunzick.herokuapp.com/ "
+        var data = { 
+            usuario: usuario, 
+            senha
+        }
+
+        await axios.post(
+            url,
+            data
+        )
+            .then( (retorno) => {
+                
+                if (retorno.data.token) {
+                    console.log(retorno.data)
+                    alert("Login efetuado com sucesso")
+                    localStorage.setItem("MeuToken", retorno.data.token)
+                    localStorage.setItem("MeuNome", retorno.data.nome)
+                    window.location = "/"
+
+                }
+
+                if (retorno.data.token === undefined)
+                    alert(retorno.data)
+
+                setCarregar(false)
+            })
+    }
+
+    return (
+        <div>
+            <h1>Login</h1>
+            <div>
+                <TextField
+                    label="Usuário"
+                    name="usuario"
+                    value={ usuario }
+                    onChange={ (e) => setUsuario(e.target.value)}
+                />
+                <TextField
+                    label="Senha"
+                    name="senha"
+                    type="password"
+                    value={ senha }
+                    onChange={ (e) => setSenha(e.target.value)}
+                />
+                <br/>
+                {
+                    (carregar)?(<CircularProgress color="secondary"/>):("")
+                }
+
+                <Button
+                    color="primary"
+                    variant="contained"
+                    onClick={ () => efetuarLogin() }
+                >
+                    Enviar
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+export default Login
+--------------------------------------------------------------------------------------
+Administracao.js
+
+import { useState } from 'react'
+import axios from 'axios'
+
+import { 
+    Button
+} from '@material-ui/core'
+
+const Administracao = () => {
+    const [ lista, setLista ] = useState(() => [])
+
+    const handleClick = async () => {
+        const token = localStorage.getItem("MeuToken")
+        
+        var bearer = `Bearer ${token}`
+        
+
+        //get( URL, { configuracoes } )
+        //post( URL, DATA, { configuracoes })
+        const url = " https://provaartinleonardogillihunzick.herokuapp.com/ "
+        await axios
+                .get(
+                    url,
+                    {
+                        headers: { "Authorization": bearer }
+                    }
+                )
+                .then( retorno => {
+                    setLista([ retorno.data ])
+                })
+    }
+
+    const usuarios = lista.map( (linha, key) => {
+        return (
+            <div key={ key }>
+                <div>{ linha.id } </div>
+                <div>{ linha.nome } </div>
+            </div>
+        )
+    })
+    return (
+        <div>
+            <h2>Área administracao</h2>
+            <Button
+                variant="contained"
+                color="secondary"
+                onClick={ () => handleClick() }
+            >
+                Carregar usuários
+            </Button>
+
+            { usuarios }
+        </div>
+    )
+}
+
+export default Administracao
+------------------------------------------------------------------------------------
+App.js
+
+import React from 'react'
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Redirect
+} from "react-router-dom"  
+
+import Administrativa from './admin/Administracao'
+import Site from './site/Site'
+import Login from './login/login'
+import axios from 'axios'
+
+const Autenticado = async () => {
+    var token = localStorage.getItem('MeuToken')
+    var bearer = `Bearer ${token}`
+
+    const url = " https://provaartinleonardogillihunzick.herokuapp.com/ "
+
+    await axios
+            .get(
+                url,
+                {
+                    headers: { "Authorization": bearer }
+                }
+            )
+            .then( retorno => {
+                if (retorno.data == "Token inválido ou já expirou") {
+                    console.log(retorno.data)
+                    return false
+                }
+
+                return true
+            })
+}
+
+const RotaPrivada = ( { component: Component, ...rest } ) => {
+    return (
+        <Route
+            { ...rest }
+            render = {
+                    props => Autenticado() ? (
+                        <Component { ...props } { ...rest } />
+                    ) : (
+                        <Redirect to="/login" />
+                    )
+            }
+        />
+    )
+}
+
+const App = () => {
+    return (
+        <Router>
+            <Switch>
+                <Route exact path="/">
+                    <Site />
+                </Route>
+
+                <RotaPrivada path="/admin" component={ Administrativa } />
+
+                <Route path="/login" component={ Login } />
+            </Switch>
+        </Router>
+    )
+}
+
+export default App
+---------------------------------------------------------------------------------
+index.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('root')
+);
+---------------------------------------------------------------------------------

@@ -1,0 +1,537 @@
+ https://provaartinleonardogillihunzick.herokuapp.com/
+controllers
+
+produtos.js
+
+var _produtos = require('../database/produtos')
+
+const Consulta = ( nome ) => {
+    var retorno = _produtos.map( (item) => {
+        if (nome == item.nome)
+            return item
+    })
+
+    return retorno
+}
+
+const ConsultaMarca = ( marca ) => {
+    var retorno = _produtos.map( (item) => {
+        if (marca == item.marca)
+            return item
+    })
+
+    return retorno
+}
+
+module.exports = { Consulta, ConsultaMarca }
+--------------------------------------------------------------------------------
+
+email.js
+
+const express = require("express")
+
+const nodemailer = require("nodemailer")
+
+var configuracoes = nodemailer.createTransport({
+    host: "outlook.office365.com",
+    port: 587,
+    auth: {
+        user: "leonardo@hotmail.com",
+        pass: "Aluno8273"
+    }
+})
+
+const esqueciSenha = (email, codigo, nome) => {
+    var data = {
+        from: {
+            "address":"leonardo@hotmail.com",
+            "name": "Aula de Artin - Escobar"
+        },
+        to: email,
+        subject: "Solicitação de troca de senha",
+        html: `
+            <html>
+            <head>
+                <style>
+                    .assinatura {
+                        color: purple;
+                        background-color: khaki;
+                    }
+        
+                    .botao {
+                        text-decoration: none;
+                        border: 1px solid #ccc;
+                        border-top: none;
+                        border-left: none;
+                        padding: 10px;
+                        border-radius: 20px;
+                        background-color: lightcoral;
+                    }
+        
+                    .botao:hover {
+                        text-decoration: none;
+                        border: 1px solid #ccc;
+                        border-bottom: none;
+                        border-right: none;
+                        padding: 10px;
+                        border-radius: 20px;
+                        background-color: tomato;
+                    }
+        
+                </style>
+            </head>
+            <body>
+                <h2>Olá ${ nome }</h2>
+                <p>Recebemos a solicitação de troca de sua senha.</p>
+                <p>Caso não tenha sido você que solicitou a troca, por favor ignore este e-mail.</p>
+                <p>Se você solicitou a troca, anote seu código ${ codigo } e clique no botão abaixo para efetuar a troca.</p>
+                <br>
+                <a href="http://ite.edu.br" class="botao">CLIQUE AQUI</a>
+                <br>
+                <br>
+                <div class="assinatura">
+                    Atenciosamente Aula de Artin
+                </div>
+            </body>
+        </html>        
+        `
+    }
+
+    return data
+}
+
+const senhaAlterada = (email, nome ) => {
+    var data = {
+        from: {
+            "address":"leonardo@hotmail.com",
+            "name": "Aula de Artin - Escobar"
+        },
+        to: email,
+        subject: "Confirmação de troca de senha",
+        html: `
+            Olá ${ nome }<br>
+            Sua senha foi alterada com sucesso.
+        `
+    }
+
+    return data
+}
+
+const enviar = async (email, codigo, nome, tipo) => {
+    var opcoes
+
+    console.log(email, codigo, nome, tipo)
+
+
+    if (tipo=="esqueciSenha")
+        opcoes = esqueciSenha(email, codigo, nome)
+
+    if ( tipo=="senhaAlterada" )
+        opcoes = senhaAlterada(email, nome)
+
+
+    await configuracoes.sendMail(opcoes, (err, info ) => {
+
+    })
+
+}
+
+module.exports = { enviar }
+----------------------------------------------------------------------------------------
+login.js
+
+const express = require("express")
+
+const route = express.Router()
+
+const Usuario = require("../models/usuarios")
+
+const Email = require("./email")
+
+const jwt = require("jsonwebtoken")
+require("dotenv/config")
+
+route.post("/login", async (req, res) => {
+    const { usuario, senha } = req.body
+
+    var dados = await Usuario.findOne({ usuario: usuario })
+
+    console.log("Chegou aqui na validação de usuário")
+    if (dados) {
+        if (dados.senha === senha) 
+        {
+        
+            const token = await jwt.sign({
+                userId: dados._id,
+                userNome: dados.nome
+            }, process.env.CHAVE_SEGUR, { expiresIn: 86400 } );
+        
+        
+            return res.send(
+                { 
+                    token,
+                    nome: dados.nome
+                }
+            )
+        }
+        else
+            return res.send("Senha inválida")
+    }
+
+    return res.send("Usuário não encontrado")
+})
+
+route.post("/esquecisenha", async (req, res) => {
+    const { email } = req.body;
+    
+    var retorno = await Usuario.findOne( { email: email })
+
+    if (retorno == null) {
+        res.send("E-mail não encontrado")
+        return false
+    }
+
+    var chave = [
+        Math.floor( Math.random() * 9 ),
+        Math.floor( Math.random() * 9 ),
+        Math.floor( Math.random() * 9 ),
+        "-",
+        Math.floor( Math.random() * 9 ),
+        Math.floor( Math.random() * 9 ),
+        Math.floor( Math.random() * 9 )
+    ]
+
+    var texto = chave.join('')
+
+    
+    retorno.chave = texto
+    const ret = await Usuario.updateOne({ _id: retorno._id }, 
+        { $set: { chave: retorno.chave }})
+        
+    res.send( "Um e-mail foi enviado para você troca a senha" )
+
+
+    await Email.enviar(retorno.email, retorno.chave, 
+        retorno.nome, "esqueciSenha")
+})
+
+route.post("/alterarsenha", async (req, res) => {
+    const { email, codigo } = req.body
+
+    console.log(email, codigo)
+
+    var dados = await Usuario.findOne({ email: email})
+
+    if (dados == null) {
+        res.send("E-mail não encontrado")
+        return false
+    }
+
+    if (codigo != dados.chave) {
+        res.send("Chave inválida")
+        return false
+    }
+
+    res.send(true)
+})
+
+route.post("/confirmasenha", async (req, res) => {
+    const { senha, codigo, email } = req.body
+
+    var dados = await Usuario.findOne({ email: email })
+
+    if (dados == null) {
+        res.send("E-mail não encontrado")
+        return false
+    }
+
+    if (codigo != dados.chave) {
+        res.send("Chave inválida")
+        return false
+    }
+
+    var retorno = Usuario.updateOne({ _id: dados._id }, 
+        { $set: { senha }})
+
+    await Email.enviar(retorno.email, "", 
+        retorno.nome, "senhaAlterada")
+
+    res.send(true)
+})
+
+module.exports = app => app.use("", route)
+----------------------------------------------------------------------------------
+usuarios.js
+
+const express = require("express")
+const Usuario = require("../models/usuarios")
+
+const route = express.Router()
+
+route.get("/lista", async (req, res) => {
+    var lista = await Usuario.find()
+    return res.send({ id: req.Id, nome: req.nome })
+})
+
+route.post("/criar", async (req, res) => {
+
+    await Usuario.create(req.body, (err, ret) => {
+        if (err)
+            return res.send(err.message)
+
+        return res.send(ret)
+    })
+
+    //return res.send( usuario )
+})
+
+module.exports = app => app.use("/usuarios", route)
+------------------------------------------------------------------------------------
+database.js
+
+require('dotenv/config')
+const mongoose = require("mongoose")
+
+try {
+    const uri = process.env.MONGO_URL
+    mongoose.connect(
+        uri,
+        {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            useCreateIndex: true
+        }
+    )
+} catch (err) {
+    console.log(err)
+}
+
+mongoose.Promise = global.Promise
+
+module.exports = mongoose
+------------------------------------------------------------------------------------------
+produtos.json
+
+[
+    {
+        "nome": "Poltrona eletrica",
+        "marca": "Roche",
+        "preco": 2000,
+        "descricao": "poltrona para descarsar"
+	"imagem": "https://moveleiro.com.br/loja/poltronas-reclinaveis/143-345-poltrona-reclinavel-confort-eletrica-couro-legitimo-premium.html?gclid=CjwKCAjwieuGBhAsEiwA1Ly_nS9AxFwqRzLwwaTCT6aAo__FGFM9ADbDmZFvnjwA8q7v0sbW__8V1xoCyyEQAvD_BwE#/67-mecanismo-tradicional/84-cor-grano_black "
+	"quantidade": 5
+    },
+    {
+        "nome": "poltrona de couro",
+        "marca": "Emmet",
+        "preco": 3000,
+        "descricao": "poltrona para relaxar"
+	"imagem": "https://www.amazon.com.br/Poltrona-Emmet-A%C3%A7o-Carbono-Couro/dp/B08X2Z9WL4/ref=asc_df_B08X2Z9WL4/?tag=googleshopp00-20&linkCode=df0&hvadid=379712080542&hvpos=&hvnetw=g&hvrand=6263834542822602307&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=1001725&hvtargid=pla-1267868037275&psc=1 "
+	"quantidade": 2
+    },
+    {
+        "nome": "poltrona reclinavel",
+        "marca": "Herval",
+        "preco": 400,
+        "descricao": "poltrona reclinavel"
+	"imagem": "https://www.colchaocostarica.com.br/moveis-sala/poltrona-reclinavel-herval-idea-mh-3605_2"
+	"quantidade": 5
+    },
+    {
+        "nome": "Sofa retratil",
+        "marca": "Denken",
+        "preco": 201,
+        "descricao": "sofa 3 lugares retratil para a familia "
+	"imagem": "https://www.mobly.com.br/sofa-3-lugares-retratil-e-reclinavel-atenas-suede-cinza-688094.html?spall_source=especiais&gclid=CjwKCAjwieuGBhAsEiwA1Ly_nVKbD8EorFeKb0m8Y4OF8RVFhbpqgvSTKCfKMH6QesbnVm8yl3ULGhoCIbwQAvD_BwE "
+	"quantidade": 6
+    },
+    {
+        "nome": "Sofa Cama",
+        "marca": "American Comfort",
+        "preco": 1080,
+        "descricao": "Sofa cama para toda a familia"
+	"imagem": "https://www.madeiramadeira.com.br/sofa-cama-3-lugares-versatil-imperio-estofados-483027.html?gclid=CjwKCAjwieuGBhAsEiwA1Ly_nVPvYSgKDVC_cgCjLcL5joLRetuTXRs82_WVnV73QljzCifLs6lF6BoC1_cQAvD_BwE&origem=pla-483027&utm_content=sofas-cama&utm_id=10876822"
+	"quantidade": 3
+    }
+]
+-------------------------------------------------------------------------------------
+middleware
+autenticar.js
+
+const jwt = require("jsonwebtoken")
+require("dotenv/config")
+
+module.exports = async (req, res, next) => {
+    const token = req.headers.authorization
+    
+    if (token == undefined)
+        return res.send("Token não foi encontrado")
+
+    //Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXV
+    //console.log(token)
+
+    //Bearer
+    //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXV
+    const valor = token.split(" ")
+
+    const [ baerer, valToken ] = valor
+
+    if (!/^Bearer$/i.test(baerer))
+        return res.send("Token mal formatdo")
+        
+    await jwt.verify( valToken, process.env.CHAVE_SEGUR, (erro, data) =>{
+        if (erro)
+            return res.send("Token inválido ou já expirou")
+
+        req.Id = data.userId
+        req.nome = data.userNome
+    })
+
+    return next()
+}
+----------------------------------------------------------------------------------------------
+
+models
+
+usuario.js
+
+const moongose = require('../database/database')
+
+const Usuarios = moongose.Schema({
+    usuario: {
+        type: String,
+        required: true
+    },
+    senha: {
+        type: String,
+        required: true
+    },
+    nome: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    chave: {
+        type:String
+    }
+})
+
+const Usuario = moongose.model('usuarios', Usuarios)
+
+module.exports = Usuario
+------------------------------------------------------------------------------------------
+index.html
+
+<html>
+    <head>
+        <style>
+            .assinatura {
+                color: purple;
+                background-color: khaki;
+            }
+
+            .botao {
+                text-decoration: none;
+                border: 1px solid #ccc;
+                border-top: none;
+                border-left: none;
+                padding: 10;
+                border-radius: 20px;
+                background-color: lightcoral;
+            }
+
+            .botao:hover {
+                text-decoration: none;
+                border: 1px solid #ccc;
+                border-bottom: none;
+                border-right: none;
+                padding: 10;
+                border-radius: 20px;
+                background-color: tomato;
+            }
+
+        </style>
+    </head>
+    <body>
+        <h2>Olá Fulano</h2>
+        <p>Recebemos a solicitação de troca de sua senha.</p>
+        <p>Caso não tenha sido você que solicitou a troca, por favor ignore este e-mail.</p>
+        <p>Se você solicitou a troca, anote seu código NNN-NNN e clique no botão abaixo para efetuar a troca.</p>
+        <br>
+        <a href="http://ite.edu.br" class="botao">CLIQUE AQUI</a>
+        <br>
+        <br>
+        <div class="assinatura">
+            Atenciosamente Aula de Artin
+        </div>
+    </body>
+</html>
+-----------------------------------------------------------------------------------------------------------------
+index.js
+
+const express = require("express")
+var app = express()
+const cors = require('cors')
+
+app.use(express.json())
+
+app.use(cors())
+
+app.get("/", (req, res) => {
+    res.send("Parabéns você chegou até aqui.")
+})
+
+
+require("./controllers/login")(app)
+
+const middleware = require('./middleware/autenticar')
+app.use(middleware)
+
+
+require("./controllers/usuarios")(app)
+
+
+app.use((req, res) => {
+    res.send("Página não encontrada")
+})
+
+app.listen(process.env.PORT || 80, () => {
+    console.log("servidor online")
+})
+----------------------------------------------------------------------------------------------
+routes
+
+produtos.js
+
+var controller = require('../controllers/produtos')
+
+module.exports = ( parametro ) => {
+
+    parametro.get("/produtos", (req, res) => {
+        var dados = req.query
+        //dados.nome
+        var resposta = controller.Consulta( dados.nome )
+
+        res.send( resposta )
+    })
+
+    parametro.post("/produtos", (req, res) => {
+        var dados = req.query
+        //dados.nome
+        var resposta = controller.Consulta( dados.marca )
+
+        res.send( resposta )
+    })
+
+    parametro.put("/produtos", (req, res) => {
+        res.send("Método POST em produtos")
+    })
+
+    parametro.delete("/produtos", (req, res) => {
+        res.send("Método POST em produtos")
+    })
+    
+}
